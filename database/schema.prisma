@@ -1,0 +1,267 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String
+  role              UserRole  @default(VIEWER)
+  isActive          Boolean   @default(true)
+  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  auditLogs         AuditLog[]
+  sessions          Session[]
+}
+
+enum UserRole {
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  lastUsedAt   DateTime @default(now())
+}
+
+model Number {
+  id              String    @id @default(cuid())
+  range           String
+  country         String
+  prefix          String
+  number          String    @unique
+  payout          Float
+  plan            String
+  status          NumberStatus @default(ACTIVE)
+  lastActivityAt  DateTime?
+  totalSms        Int       @default(0)
+  totalEarnings   Float     @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  messages        Message[]
+  inboundMessages InboundMessage[]
+}
+
+enum NumberStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model Range {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  country     String
+  prefix      String
+  startNumber String
+  endNumber   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Provider {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  type         ProviderType
+  config       Json     // Encrypted in production
+  isActive     Boolean  @default(true)
+  priority     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  routes       Route[]
+}
+
+enum ProviderType {
+  SMPP
+  HTTP
+}
+
+model Route {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  providerId  String
+  provider    Provider  @relation(fields: [providerId], references: [id])
+  isActive    Boolean   @default(true)
+  priority    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  messages    Message[]
+}
+
+enum TransportType {
+  SMPP
+  HTTP
+}
+
+model Message {
+  id                String        @id @default(cuid())
+  externalId        String?       @unique
+  destination       String
+  sender            String
+  messageBody       String
+  messageHash       String
+  transport         TransportType @default(SMPP)
+  providerId        String?
+  routeId           String?
+  route             Route?        @relation(fields: [routeId], references: [id])
+  numberId          String?
+  number            Number?       @relation(fields: [numberId], references: [id])
+  providerName      String?
+  routeName         String?
+  providerMessageId String?
+  providerResponse  Json?
+  status            MessageStatus @default(PENDING)
+  retryCount        Int           @default(0)
+  errorCode         String?
+  errorMessage      String?
+  submittedAt       DateTime?
+  deliveredAt       DateTime?
+  failedAt          DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deliveryReceipts  DeliveryReceipt[]
+  attempts          MessageAttempt[]
+  earnings          EarningRecord[]
+
+  @@index([messageHash])
+  @@index([providerMessageId])
+  @@index([destination])
+  @@index([sender])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum MessageStatus {
+  PENDING
+  RETRYING
+  SUBMITTED
+  SENT
+  DELIVERED
+  FAILED
+  EXPIRED
+}
+
+model MessageAttempt {
+  id               String   @id @default(cuid())
+  messageId        String
+  message          Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  attemptNumber    Int
+  status           String
+  errorCode        String?
+  errorMessage     String?
+  providerResponse Json?
+  createdAt        DateTime @default(now())
+
+  @@index([messageId])
+  @@index([createdAt])
+}
+
+model ProviderEvent {
+  id          String   @id @default(cuid())
+  source      String
+  eventType   String
+  messageId   String?
+  externalId  String?
+  payload     Json?
+  createdAt   DateTime @default(now())
+
+  @@index([messageId])
+  @@index([externalId])
+  @@index([createdAt])
+}
+
+model EarningRecord {
+  id               String   @id @default(cuid())
+  messageId        String?
+  message          Message? @relation(fields: [messageId], references: [id])
+  inboundMessageId String?  @unique
+  rate             Float
+  currency         String   @default("USD")
+  billableStatus   String
+  range            String?
+  number           String?
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([billableStatus])
+}
+
+enum InboundProcessingStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
+}
+
+model InboundMessage {
+  id                String                  @id @default(cuid())
+  date              DateTime
+  time              String
+  range             String
+  number            String
+  recipient         String?
+  numberId          String?
+  numberObj         Number?                 @relation(fields: [numberId], references: [id])
+  cli               String
+  message           String
+  providerMessageId String?
+  currency          String
+  payout            Float                   @default(0)
+  status            String
+  processingStatus  InboundProcessingStatus @default(RECEIVED)
+  createdAt         DateTime                @default(now())
+
+  @@index([cli])
+  @@index([number])
+  @@index([providerMessageId])
+  @@index([createdAt])
+}
+
+model DeliveryReceipt {
+  id          String   @id @default(cuid())
+  messageId   String
+  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  status      String
+  timestamp   DateTime
+  errorCode   String?
+  receivedAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String
+  entity      String
+  entityId    String?
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  category    String
+  description String?
+  isSecret    Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}

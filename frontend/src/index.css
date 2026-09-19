@@ -1,0 +1,200 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-luxury-darker text-white antialiased;
+  }
+  
+  * {
+    @apply border-luxury-border;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-luxury-card backdrop-blur-xl border border-luxury-border rounded-2xl shadow-card;
+  }
+  
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1;
+  }
+  
+  .glow-text {
+    text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+  }
+  
+  .gradient-border {
+    position: relative;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+  }
+  
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  
+  .animated-bg {
+    background: linear-gradient(-45deg, #0a0a0f, #1a1a2e, #16213e, #0f3460);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+  
+  .particle-bg {
+    background-image: 
+      radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+  }
+  
+  .grid-bg {
+    background-image: 
+      linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+  
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+  
+  .status-connected {
+    @apply bg-luxury-success shadow-glow;
+  }
+  
+  .status-disconnected {
+    @apply bg-luxury-error;
+  }
+  
+  .status-reconnecting {
+    @apply bg-luxury-warning animate-pulse;
+  }
+  
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-to-r from-luxury-accent to-luxury-purple rounded-xl font-semibold
+           transition-all duration-300 hover:shadow-glow hover:scale-105 active:scale-95
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 bg-luxury-card border border-luxury-border rounded-xl font-semibold
+           transition-all duration-300 hover:bg-luxury-accent/20 hover:border-luxury-accent/50
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 bg-luxury-dark/50 border border-luxury-border rounded-xl
+           focus:outline-none focus:border-luxury-accent focus:ring-2 focus:ring-luxury-accent/20
+           transition-all duration-300 placeholder-gray-500;
+  }
+  
+  .table-row {
+    @apply transition-all duration-200 hover:bg-luxury-accent/5;
+  }
+  
+  .skeleton {
+    @apply animate-pulse bg-luxury-card rounded;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    white-space: normal;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-luxury-darker;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-luxury-border rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-luxury-accent/50;
+}
+
+/* 3D Card Effect */
+.card-3d {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.card-3d-inner {
+  transition: transform 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.card-3d:hover .card-3d-inner {
+  transform: rotateY(5deg) rotateX(5deg);
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  @apply inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Toast animations */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.toast-enter {
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast-exit {
+  animation: slideOut 0.3s ease-in;
+}
+
+/* Prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
