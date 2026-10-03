@@ -13,6 +13,8 @@ model User {
   email          String          @unique
   name           String?
   passwordHash   String
+  resetToken    String?
+  resetTokenExp DateTime?
   role           UserRole        @default(USER)
   isActive       Boolean         @default(true)
   lastLoginAt    DateTime?
