@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import useSocket from '@/hooks/useSocket';
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -51,9 +52,33 @@ const faqData = [
 export default function LandingPage() {
   const [utcTime, setUtcTime] = useState("");
   const [trafficData, setTrafficData] = useState<any[]>([]);
+  const socketRef = useSocket('traffic');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
+    // Listen for realtime traffic events from Socket.IO
+    const socket = socketRef.current;
+    if (socket) {
+      const handler = (payload: any) => {
+        const item = {
+          country: payload.destination || payload.country || '—',
+          prefix: payload.prefix || payload.range || '—',
+          range: payload.prefix || '—',
+          rate: Number(payload.rate) || 0,
+          status: payload.status || 'LIVE',
+        };
+        setTrafficData((prev) => {
+          const next = [item, ...prev];
+          return next.slice(0, 50);
+        });
+      };
+
+      socket.on('traffic:new', handler);
+      return () => {
+        socket.off('traffic:new', handler);
+      };
+    }
+
     const updateTime = () => {
       const now = new Date();
       setUtcTime(now.toUTCString());

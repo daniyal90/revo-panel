@@ -10,6 +10,7 @@ export default function AdminPage() {
   const [ranges, setRanges] = useState<any[]>([]);
 
   const loadUsers = async () => {
+    // request pending users using legacy query param; backend maps this to isActive=false
     const res = await fetch('/api/admin/users?status=PENDING');
     if (!res.ok) return;
     const json = await res.json();

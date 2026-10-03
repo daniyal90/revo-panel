@@ -5,31 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 
 export default function WelcomeSplash() {
-  // null = not decided yet (prevents initial flash); false = don't show; true = show
-  const [show, setShow] = useState<boolean | null>(null);
+  // Always show on mount; do not persist seen state
+  const [show, setShow] = useState<boolean>(true);
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const seen = sessionStorage.getItem('revo_welcome_shown');
-      if (seen) {
-        setShow(false);
-        return;
-      }
-      // show for a shorter, non-blocking duration
-      setShow(true);
-      sessionStorage.setItem('revo_welcome_shown', '1');
-      timer = setTimeout(() => setShow(false), 1200);
-    } catch (e) {
-      setShow(true);
-      timer = setTimeout(() => setShow(false), 1200);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
+    const timer = setTimeout(() => setShow(false), 1200);
+    return () => clearTimeout(timer);
   }, []);
-
-  if (show === null) return null; // avoid flicker while deciding
 
   return (
     <AnimatePresence>
@@ -51,6 +33,13 @@ export default function WelcomeSplash() {
             <div className="w-36 h-36 rounded-lg flex items-center justify-center bg-gradient-to-br from-[#5B2BFF] to-[#FF4DD2] p-2 shadow-2xl">
               <Image src="/icons/icon-base.svg" alt="Revo Panel" width={96} height={96} priority />
             </div>
+            <button
+              onClick={() => setShow(false)}
+              aria-label="Close welcome"
+              className="absolute top-4 right-4 text-white/80 hover:text-white"
+            >
+              ✕
+            </button>
             <h1 className="mt-6 text-2xl font-semibold text-white">Welcome to Revo Panel</h1>
             <p className="mt-2 text-sm text-white/80">SMS Traffic Monetization Platform</p>
             <div className="w-60 mt-6">

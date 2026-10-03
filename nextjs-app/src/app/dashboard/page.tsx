@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut, useSession } from 'next-auth/react';
+import useSocket from '@/hooks/useSocket';
 
 const initialStats = { totalTraffic: 0, deliveredSms: 0, netEarnings: 0, pendingPayouts: 0 };
 
@@ -59,6 +60,22 @@ export default function DashboardPage() {
   const [ltcAddress, setLtcAddress] = useState<string>('');
   const [usdtAddress, setUsdtAddress] = useState<string>('');
   const [formError, setFormError] = useState<string | null>(null);
+
+  // connect to realtime socket for dashboard updates
+  const socketRef = useSocket('dashboard');
+
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+    const onStats = (data: any) => setStats((prev) => ({ ...prev, ...data }));
+    const onNewPayout = (p: any) => setPayouts((prev) => [p, ...prev]);
+    socket.on('stats:update', onStats);
+    socket.on('payout:new', onNewPayout);
+    return () => {
+      socket.off('stats:update', onStats);
+      socket.off('payout:new', onNewPayout);
+    };
+  }, [socketRef]);
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -178,7 +195,7 @@ export default function DashboardPage() {
         if (!res.ok) return;
         const json = await res.json();
         if (json?.data) {
-          setProfileWhatsapp(json.data.whatsappNumber || '');
+          setProfileWhatsapp('');
         }
       } catch (e) {}
     })();
@@ -245,7 +262,7 @@ export default function DashboardPage() {
                   const res = await fetch('/api/user/profile', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: profileName, whatsappNumber: profileWhatsapp, currentPassword, newPassword }),
+                    body: JSON.stringify({ name: profileName, currentPassword, newPassword }),
                   });
                   const json = await res.json();
                   if (!res.ok) throw new Error(json?.error || 'Failed to update');

@@ -17,6 +17,7 @@ model User {
   isActive       Boolean         @default(true)
   lastLoginAt    DateTime?
   apiKey         String?         @unique
+	status         UserStatus      @default(PENDING)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   trafficLogs    TrafficLog[]

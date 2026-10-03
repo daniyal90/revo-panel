@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { decimalToNumber } from "@/lib/decimal";
 // Email helper may be unavailable in some environments; provide a noop fallback
 async function sendEmail(opts: { to: string; subject: string; text?: string; html?: string }) {
@@ -12,7 +12,7 @@ async function sendEmail(opts: { to: string; subject: string; text?: string; htm
     if (mod?.sendEmail) return mod.sendEmail(opts as any);
   } catch (e) {
     // fallback: log and continue
-    console.warn('sendEmail module not available, skipping email:', e?.message || e);
+      console.warn('sendEmail module not available, skipping email:', (e as any)?.message || e);
   }
   return null;
 }

@@ -24,8 +24,8 @@ interface RegisterFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  companyName: string;
-  whatsappNumber: string;
+  companyName?: string;
+  whatsappNumber?: string;
 }
 
 export default function RegisterPage() {

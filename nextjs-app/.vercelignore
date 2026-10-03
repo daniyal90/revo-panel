@@ -1,0 +1,3 @@
+echo .vs > .vercelignore
+echo *.slnx >> .vercelignore
+echo *.suo >> .vercelignore

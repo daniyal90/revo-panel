@@ -7,8 +7,6 @@ const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  companyName: z.string().min(2, "Company name must be at least 2 characters"),
-  whatsappNumber: z.string().min(10, "WhatsApp number must be at least 10 digits"),
 });
 
 export async function POST(request: Request) {
@@ -27,9 +25,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, email, password, companyName, whatsappNumber } = validation.data;
+    const { name, email, password } = validation.data;
 
-    console.log("Validated data:", { name, email, companyName, whatsappNumber });
+    console.log("Validated data:", { name, email });
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -46,48 +44,36 @@ export async function POST(request: Request) {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Create user
+    // Create user with PENDING status; do not sign in automatically
     const user = await prisma.user.create({
       data: {
         name,
         email,
         passwordHash,
-        companyName,
-        whatsappNumber,
         role: "USER",
+        status: 'PENDING',
+        isActive: false,
       },
       select: {
         id: true,
         email: true,
         name: true,
-        companyName: true,
-        whatsappNumber: true,
         role: true,
+        status: true,
         createdAt: true,
       },
     });
 
     console.log("User created:", user);
 
-    // Create audit log
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: "USER_REGISTERED",
-        entity: "User",
-        entityId: user.id,
-        details: {
-          email: user.email,
-          companyName: user.companyName,
-          whatsappNumber: user.whatsappNumber,
-        },
-      },
-    });
+    // Audit log not present in schema; skip creating audit logs here.
 
+    // Redirect to pending approval page (client should handle redirect if API used via fetch)
     return NextResponse.json(
       {
         message: "Registration successful",
         user,
+        redirect: '/pending-approval',
       },
       { status: 201 }
     );

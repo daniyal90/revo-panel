@@ -1,26 +1,28 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
-export async function GET(request: Request) {
+export async function PATCH(request, context) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.role !== 'ADMIN') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    const url = new URL(request.url);
-    const status = url.searchParams.get('status'); // PENDING, APPROVED, REJECTED
+    const { id } = await context.params;
+    const body = await request.json();
+    const { status } = body; // e.g. "APPROVED"
 
-    const where: any = {};
-    if (status) where.status = status;
-
-    const users = await prisma.user.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      select: { id: true, email: true, name: true, createdAt: true, status: true, role: true, isActive: true },
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { 
+        status: status,
+        isActive: status === 'APPROVED' ? true : false 
+      },
     });
 
-    return NextResponse.json({ data: users });
+    return NextResponse.json({ success: true, data: updatedUser });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

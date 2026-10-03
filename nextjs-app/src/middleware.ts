@@ -14,6 +14,17 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
     }
 
+    // if token present but not approved, redirect to pending approval page
+    const status = (token as any).status;
+    if (status && status !== 'APPROVED') {
+      const allowed = ['/pending-approval', '/logout', '/api/auth'];
+      if (!allowed.some(p => pathname.startsWith(p))) {
+        const url = req.nextUrl.clone();
+        url.pathname = '/pending-approval';
+        return NextResponse.redirect(url);
+      }
+    }
+
     // restrict /admin to admins only
     if (pathname.startsWith('/admin')) {
       const role = (token as any).role;

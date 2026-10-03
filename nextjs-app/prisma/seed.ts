@@ -16,14 +16,14 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: adminEmail },
-    update: { apiKey: adminApiKey, passwordHash: adminPassword, role: 'ADMIN', isActive: true, status: 'APPROVED' },
-    create: { email: adminEmail, name: 'Admin', apiKey: adminApiKey, passwordHash: adminPassword, role: 'ADMIN', isActive: true, status: 'APPROVED' },
+      update: { apiKey: adminApiKey, passwordHash: adminPassword, role: 'ADMIN', isActive: true },
+      create: { email: adminEmail, name: 'Admin', apiKey: adminApiKey, passwordHash: adminPassword, role: 'ADMIN', isActive: true },
   });
 
   await prisma.user.upsert({
     where: { email: userEmail },
-    update: { apiKey: userApiKey, passwordHash: userPassword, role: 'USER', isActive: true, status: 'PENDING' },
-    create: { email: userEmail, name: 'Demo User', apiKey: userApiKey, passwordHash: userPassword, role: 'USER', isActive: true, status: 'PENDING' },
+      update: { apiKey: userApiKey, passwordHash: userPassword, role: 'USER', isActive: true },
+      create: { email: userEmail, name: 'Demo User', apiKey: userApiKey, passwordHash: userPassword, role: 'USER', isActive: true },
   });
 
   const ranges = [

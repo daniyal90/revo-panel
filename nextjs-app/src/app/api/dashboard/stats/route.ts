@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/decimal";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 export async function GET() {
   try {
@@ -23,21 +24,21 @@ export async function GET() {
       where: { userId, status: "DELIVERED" },
     });
 
-    // Get total earnings from delivered SMS
+    // Get total earnings from delivered SMS (use payoutAmount field)
     const trafficLogs = await prisma.trafficLog.findMany({
       where: { userId, status: "DELIVERED" },
-      select: { earnings: true },
+      select: { payoutAmount: true },
     });
 
-    const netEarnings = trafficLogs.reduce((sum, log) => sum + log.earnings, 0);
+    const netEarnings = trafficLogs.reduce((sum, log) => sum + (log.payoutAmount ? decimalToNumber(log.payoutAmount) : 0), 0);
 
-    // Get pending payouts (not paid)
-    const pendingPayouts = await prisma.payout.aggregate({
-      where: { userId, status: { in: ["PENDING", "PROCESSING"] } },
+    // Get pending payouts (not paid) from payoutRequest
+    const pendingPayouts = await prisma.payoutRequest.aggregate({
+      where: { userId, status: { in: ["PENDING", "APPROVED"] } },
       _sum: { amount: true },
     });
 
-    const pendingAmount = pendingPayouts._sum.amount || 0;
+    const pendingAmount = pendingPayouts._sum.amount ? decimalToNumber(pendingPayouts._sum.amount) : 0;
 
     return NextResponse.json({
       totalTraffic,
