@@ -6,11 +6,35 @@ export type SmsTransport = 'SMPP' | 'HTTP';
 
 export function resolveTransport(): SmsTransport {
   const preferred = process.env.LAMIX_SMS_TRANSPORT?.toUpperCase();
-  if (preferred === 'HTTP' && hasHttpConfig()) return 'HTTP';
-  if (preferred === 'SMPP' && smppManager.hasValidConfig()) return 'SMPP';
+  // Preferred explicit selection
+  if (preferred === 'HTTP') {
+    if (hasHttpConfig()) return 'HTTP';
+    throw new Error('HTTP transport selected but missing configuration: LAMIX_HTTP_URL and/or LAMIX_HTTP_TOKEN');
+  }
+  if (preferred === 'SMPP') {
+    if (smppManager.hasValidConfig()) return 'SMPP';
+    throw new Error(
+      'SMPP transport selected but missing configuration: LAMIX_SMPP_HOST, LAMIX_SMPP_PORT, LAMIX_SMPP_SYSTEM_ID, LAMIX_SMPP_PASSWORD'
+    );
+  }
+
+  // Auto-detect
   if (smppManager.hasValidConfig()) return 'SMPP';
   if (hasHttpConfig()) return 'HTTP';
-  throw new Error('No Lamix transport configured. Set SMPP or HTTP environment variables.');
+
+  // Provide detailed guidance about missing env vars
+  const missing: string[] = []
+  if (!smppManager.hasValidConfig()) {
+    if (!process.env.LAMIX_SMPP_HOST) missing.push('LAMIX_SMPP_HOST')
+    if (!process.env.LAMIX_SMPP_PORT) missing.push('LAMIX_SMPP_PORT')
+    if (!process.env.LAMIX_SMPP_SYSTEM_ID) missing.push('LAMIX_SMPP_SYSTEM_ID')
+    if (!process.env.LAMIX_SMPP_PASSWORD) missing.push('LAMIX_SMPP_PASSWORD')
+  }
+  if (!hasHttpConfig()) {
+    if (!process.env.LAMIX_HTTP_URL) missing.push('LAMIX_HTTP_URL')
+    if (!process.env.LAMIX_HTTP_TOKEN) missing.push('LAMIX_HTTP_TOKEN')
+  }
+  throw new Error('No Lamix transport configured. Missing: ' + missing.join(', '));
 }
 
 export async function sendViaTransport(params: {

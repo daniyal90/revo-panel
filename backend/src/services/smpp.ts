@@ -1,3 +1,5 @@
+// Import as CommonJS default; our local declaration file in src/types/smpp.d.ts
+// provides the necessary TypeScript types. Keep esModuleInterop semantics.
 import smpp from 'smpp';
 import { EventEmitter } from 'events';
 import { logger } from '../utils/logger';
@@ -133,6 +135,12 @@ export class SMPPManager extends EventEmitter {
   }
 
   async connect(): Promise<void> {
+    // Ensure SMPP is only used when explicitly configured and running in production
+    const transport = (process.env.LAMIX_TRANSPORT || '').toUpperCase();
+    if (transport !== 'SMPP') {
+      throw new Error('SMPP transport disabled by configuration (LAMIX_TRANSPORT != SMPP)');
+    }
+
     if (!isProductionMode()) {
       throw new Error('SMPP is only available when LAMIX_MODE=production');
     }

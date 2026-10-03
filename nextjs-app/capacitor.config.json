@@ -1,0 +1,10 @@
+{
+  "appId": "com.revo.panel",
+  "appName": "Revo Panel Admin",
+  "webDir": "out",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://your-domain.com/admin",
+    "cleartext": false
+  }
+}

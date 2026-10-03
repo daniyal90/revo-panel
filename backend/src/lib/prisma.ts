@@ -16,6 +16,26 @@ if (process.env.NODE_ENV === 'test') {
   _prisma = {
     // Minimal stubs used by unit tests. Tests can override these methods.
     message: { update: async () => ({}), findUnique: async () => null },
+    // Provide a minimal user model stub so auth routes do not crash in test mode.
+    // For convenience, expose a default admin user for local testing only.
+    user: {
+      findUnique: async (args: any) => {
+        const where = args?.where ?? {};
+        if (where.email === 'admin@lamix.com') {
+          // password: 'password' hashed with bcryptjs, cost 12
+          return {
+            id: 'admin-local',
+            email: 'admin@lamix.com',
+            role: 'ADMIN',
+            passwordHash: '$2a$12$wJmV1QGZq0Y1b0zQ3aWwAe0q4K7rQm6Q0Zp7Y0b5Qy0x8a6sV6m1e',
+            isActive: true,
+          };
+        }
+        return null;
+      },
+      create: async ({ data }: any) => ({ id: data.email ?? 'user-local', email: data.email, role: data.role ?? 'ADMIN', isActive: true }),
+      update: async ({ where, data }: any) => ({ id: where.id, email: data.email ?? 'admin@lamix.com', role: data.role ?? 'ADMIN', isActive: data.isActive ?? true }),
+    },
     messageAttempt: { create: async () => ({}) },
     inboundMessage: { create: async () => ({}) },
     providerEvent: { create: async () => ({}) },

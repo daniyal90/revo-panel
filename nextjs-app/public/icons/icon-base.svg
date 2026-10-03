@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+	<linearGradient id="grad1" x1="0" x2="1">
+	  <stop offset="0%" stop-color="#5B2BFF"/>
+	  <stop offset="100%" stop-color="#FF4DD2"/>
+	</linearGradient>
+	<filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+	  <feGaussianBlur stdDeviation="18" result="coloredBlur"/>
+	  <feMerge>
+		<feMergeNode in="coloredBlur"/>
+		<feMergeNode in="SourceGraphic"/>
+	  </feMerge>
+	</filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" rx="128" fill="#07102a" />
+
+  <!-- Subtle gradient vignette -->
+  <rect width="100%" height="100%" rx="128" fill="url(#grad1)" opacity="0.06" />
+
+  <!-- Shield outline -->
+  <g transform="translate(220,160) scale(0.6)" opacity="0.9">
+	<path d="M256 32L480 96v144c0 176-128 320-224 352C160 560 32 464 32 272V96L256 32z" fill="none" stroke="url(#grad1)" stroke-width="10" opacity="0.14"/>
+  </g>
+
+  <!-- Neon R with signal arcs -->
+  <g transform="translate(256,200) scale(1.1)">
+	<!-- signal arcs -->
+	<g transform="translate(40,60)" stroke="#00F0FF" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.9" filter="url(#glow)">
+	  <path d="M360 200c0-88-72-160-160-160" stroke-opacity="0.12" />
+	  <path d="M360 200c0-132-108-240-240-240" stroke-opacity="0.06" />
+	</g>
+
+	<!-- Letter R base -->
+	<g transform="translate(74,88) scale(0.9)" filter="url(#glow)">
+	  <path d="M200 64c0-35-28-64-64-64H72v320h64v-120h36c35 0 64-28 64-64V64z" fill="url(#grad1)"/>
+	  <path d="M200 64c0-35-28-64-64-64H72v320h64v-120h36c35 0 64-28 64-64V64z" fill="none" stroke="#00F0FF" stroke-width="8" opacity="0.28"/>
+	  <!-- diagonal leg -->
+	  <path d="M192 224l96 144" stroke="#00F0FF" stroke-width="14" stroke-linecap="round" opacity="0.95"/>
+	</g>
+
+	<!-- glass highlight -->
+	<g opacity="0.18">
+	  <path d="M120 40c140-56 300-12 360 92" stroke="#FFFFFF" stroke-width="8" fill="none" opacity="0.06"/>
+	</g>
+  </g>
+
+  <!-- soft overlay shine -->
+  <g>
+	<ellipse cx="770" cy="120" rx="220" ry="80" fill="#FFFFFF" opacity="0.02" />
+  </g>
+</svg>

@@ -4,7 +4,7 @@ import { logger } from '../utils/logger';
 import Redis from 'ioredis';
 import { prisma } from '../lib/prisma';
 import { isDemoMode } from '../config/mode';
-import { resolveTransport, sendViaTransport, isPermanentProviderError } from './smsTransport';
+import { sendViaTransport, isPermanentProviderError } from './smsTransport';
 
 console.log('MODULE LOAD: messageQueue');
 
@@ -142,7 +142,7 @@ export async function processSmsJob(job: Job<SmsJobData>, io: SocketIOServer) {
   }
 
   try {
-    if (process.env.NODE_ENV === 'test') logger.info('TEST LOG: calling sendViaTransport', { messageId });
+    if (process.env.NODE_ENV === 'test') logger.info('TEST LOG: calling sendViaTransport', { messageId }); // noop
     const result = await sendViaTransport({
       messageId,
       destination: job.data.destination,
@@ -242,10 +242,6 @@ export function initializeQueue(io: SocketIOServer) {
       limiter: {
         max: RATE_LIMIT_MAX,
         duration: RATE_LIMIT_DURATION_MS,
-      },
-      settings: {
-        stalledInterval: 30000,
-        maxStalledCount: 2,
       },
     }
   );

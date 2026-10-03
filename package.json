@@ -1,8 +1,16 @@
 {
+  "scripts": {
+    "start": "tsx index.ts"
+  },
   "devDependencies": {
-    "prisma": "^5.22.0"
+    "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.13",
+    "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0"
+    "@prisma/client": "^5.22.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   }
 }

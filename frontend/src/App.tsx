@@ -9,6 +9,7 @@ import IncomingSMS from './pages/IncomingSMS'
 import Reports from './pages/Reports'
 import Integration from './pages/Integration'
 import Settings from './pages/Settings'
+import NumberDetails from './pages/NumberDetails'
 import { useAuthStore } from './store/authStore'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -32,6 +33,7 @@ function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="numbers" element={<Numbers />} />
+          <Route path="numbers/:id" element={<NumberDetails />} />
           <Route path="send-sms" element={<SendSMS />} />
           <Route path="incoming-sms" element={<IncomingSMS />} />
           <Route path="reports" element={<Reports />} />

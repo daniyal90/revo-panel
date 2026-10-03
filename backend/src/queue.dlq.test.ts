@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { prisma } from './lib/prisma';
+
+// Ensure test environment is set before importing code that initializes Prisma.
+process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 
 process.on('uncaughtException', (err) => {
   console.error('TEST UNCAUGHT EXCEPTION', err && err.stack ? err.stack : err);
@@ -11,8 +13,34 @@ process.on('unhandledRejection', (reason) => {
 
 test('processSmsJob moves permanent error to DLQ and marks message FAILED', async () => {
   process.env.LAMIX_MODE = 'production';
-  // Ensure test-mode logging in messageQueue
+  // Ensure test-mode logging in messageQueue (already set at module load)
   process.env.NODE_ENV = 'test';
+
+  // Import prisma after NODE_ENV is set so lib/prisma returns the test stub.
+  const { prisma } = await import('./lib/prisma');
+
+  // Ensure a Message record exists matching the job.messageId to avoid FK errors
+  // when the real Prisma client is used. If using the test stub, provide a
+  // minimal create implementation that returns the data.
+  const existingCreate = prisma?.message?.create;
+  if (typeof existingCreate !== 'function') {
+    // @ts-ignore - tests run in a controlled environment
+    prisma.message = prisma.message || {};
+    // @ts-ignore
+    prisma.message.create = async ({ data }: any) => ({ ...data });
+  }
+
+  // Create the message record that will be referenced by MessageAttempt
+  await prisma.message.create({
+    data: {
+      id: 'msg-dlq-2',
+      destination: '+300',
+      sender: 'SND',
+      messageBody: 'perm error',
+      messageHash: 'perm-error-hash',
+      transport: 'SMPP',
+    },
+  });
 
   console.log('TEST: starting DLQ test - installing transport override');
 

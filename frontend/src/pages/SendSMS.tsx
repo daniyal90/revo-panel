@@ -18,9 +18,16 @@ export default function SendSMS() {
   const [otpExpiry, setOtpExpiry] = useState(5)
 
   const handleSend = async () => {
-    if (!destination || !senderId || !message) {
-      toast.error('Please fill in all required fields')
-      return
+    if (otpMode) {
+      if (!destination) {
+        toast.error('Please fill in the destination number')
+        return
+      }
+    } else {
+      if (!destination || !senderId || !message) {
+        toast.error('Please fill in all required fields')
+        return
+      }
     }
 
     setSending(true)

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revo Panel Multi-Profile Automation Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--card-border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-area h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .logo-area span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .global-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+            .btn:hover {
+                background-color: var(--accent-hover);
+            }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+            .btn-danger:hover {
+                background-color: #dc2626;
+            }
+
+        main {
+            padding: 2rem;
+            flex: 1;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .profile-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 160px;
+            position: relative;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+            .profile-card:hover {
+                border-color: var(--accent);
+                transform: translateY(-2px);
+            }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .profile-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+        }
+
+            .status-dot.running {
+                background-color: var(--warning);
+                box-shadow: 0 0 8px var(--warning);
+            }
+
+            .status-dot.success {
+                background-color: var(--success);
+                box-shadow: 0 0 8px var(--success);
+            }
+
+            .status-dot.idle {
+                background-color: var(--text-muted);
+            }
+
+        .card-body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+            margin: 0.5rem 0;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+            .action-btn:hover {
+                background-color: var(--card-border);
+            }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <h1>Revo Control Center</h1>
+            <span>Multi-Profile Skrill Automation Grid</span>
+        </div>
+        <div class="global-controls">
+            <button class="btn" onclick="startAll()">Start All Profiles</button>
+            <button class="btn btn-danger" onclick="stopAll()">Stop All</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="grid-container" id="gridContainer">
+            <!-- Dynamic Boxes (P01 to P35) will be injected here -->
+        </div>
+    </main>
+
+    <script>
+        const TOTAL_PROFILES = 35;
+        const gridContainer = document.getElementById('gridContainer');
+
+        function initGrid() {
+            let html = '';
+            for (let i = 1; i <= TOTAL_PROFILES; i++) {
+                const idStr = i < 10 ? `P0${i}` : `P${i}`;
+                html += `
+                    <div class="profile-card" id="card-${i}">
+                        <div class="card-header">
+                            <span class="profile-title">${idStr}</span>
+                            <div class="status-dot idle" id="dot-${i}" title="Idle"></div>
+                        </div>
+                        <div class="card-body" id="status-text-${i}">
+                            idle
+                        </div>
+                        <div class="card-footer">
+                            <span id="metric-${i}">0 imp</span>
+                            <button class="action-btn" onclick="toggleProfile(${i})">Launch</button>
+                        </div>
+                    </div>
+                `;
+            }
+            gridContainer.innerHTML = html;
+        }
+
+        function toggleProfile(id) {
+            const dot = document.getElementById(`dot-${id}`);
+            const statusText = document.getElementById(`status-text-${id}`);
+
+            if (dot.classList.contains('idle')) {
+                dot.className = 'status-dot running';
+                statusText.innerText = 'running...';
+                dot.title = 'Running';
+            } else {
+                dot.className = 'status-dot idle';
+                statusText.innerText = 'idle';
+                dot.title = 'Idle';
+            }
+        }
+
+        function startAll() {
+            for (let i = 1; i <= TOTAL_PROFILES; i++) {
+                document.getElementById(`dot-${i}`).className = 'status-dot running';
+                document.getElementById(`status-text-${i}`).innerText = 'running...';
+            }
+        }
+
+        function stopAll() {
+            for (let i = 1; i <= TOTAL_PROFILES; i++) {
+                document.getElementById(`dot-${i}`).className = 'status-dot idle';
+                document.getElementById(`status-text-${i}`).innerText = 'idle';
+            }
+        }
+
+        // Initialize grid on load
+        initGrid();
+    </script>
+</body>
+</html>

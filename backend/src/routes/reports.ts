@@ -1,6 +1,7 @@
 import { Router, Response, NextFunction } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { prisma } from '../lib/prisma';
+import type { Message, EarningRecord } from '@prisma/client';
 import { isDemoMode } from '../config/mode';
 
 const router = Router();
@@ -28,18 +29,19 @@ router.post('/generate', authenticate, async (req: AuthRequest, res: Response, n
       }),
     ]);
 
-    const totalSms = messages.length;
-    const successful = messages.filter((m) => m.status === 'SENT' || m.status === 'DELIVERED').length;
-    const failed = messages.filter((m) => m.status === 'FAILED').length;
-    const pending = messages.filter((m) =>
-      ['PENDING', 'RETRYING', 'SUBMITTED'].includes(m.status)
-    ).length;
-    const totalEarnings = earnings.reduce((sum, e) => sum + e.rate, 0);
+    const msgs = messages as Message[];
+    const ers = earnings as EarningRecord[];
+
+    const totalSms = msgs.length;
+    const successful = msgs.filter((m: Message) => m.status === 'SENT' || m.status === 'DELIVERED').length;
+    const failed = msgs.filter((m: Message) => m.status === 'FAILED').length;
+    const pending = msgs.filter((m: Message) => ['PENDING', 'RETRYING', 'SUBMITTED'].includes(m.status)).length;
+    const totalEarnings = ers.reduce((sum: number, e: EarningRecord) => sum + Number(e.rate), 0);
 
     const dayKey = (d: Date) => d.toISOString().slice(0, 10);
     const byDay = new Map<string, { volume: number; successful: number; failed: number; earnings: number }>();
 
-    for (const m of messages) {
+    for (const m of msgs) {
       const key = dayKey(m.createdAt);
       const row = byDay.get(key) ?? { volume: 0, successful: 0, failed: 0, earnings: 0 };
       row.volume++;
@@ -48,7 +50,7 @@ router.post('/generate', authenticate, async (req: AuthRequest, res: Response, n
       byDay.set(key, row);
     }
 
-    for (const e of earnings) {
+    for (const e of ers) {
       const key = dayKey(e.createdAt);
       const row = byDay.get(key) ?? { volume: 0, successful: 0, failed: 0, earnings: 0 };
       row.earnings += e.rate;
